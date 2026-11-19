@@ -410,7 +410,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Pretendard', san
     <div class="benefit-top">
       <h3>베네핏 배분 계산기 <span class="needs-data">✓ 11/18 기준</span></h3>
       <div class="benefit-note" style="margin-top:6px;">
-        보상액의 20% → 재원 | 제휴실 정액 10% | 잔여 90% → 부서별 MoM 배분 (증감률 50% + 증감금액 50%)
+        보상액의 20% → 재원 | 제휴실 정액 10% | 잔여 90% → 마케팅·IMC·그로스 MoM 배분 (증감률 50% + 증감금액 50%)
       </div>
     </div>
 
@@ -475,7 +475,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Pretendard', san
           <div class="mom-cell"><span class="mom-delta" id="rate-3">—</span></div>
         </div>
         <div class="mom-row" id="mom-row-4">
-          <div class="mom-cell dept-label">미디어제휴실</div>
+          <div class="mom-cell dept-label">미디어제휴실(제휴실)</div>
           <div class="mom-cell"><input type="number" id="apr-4" value="1136" oninput="calcBenefit()"></div>
           <div class="mom-cell"><input type="number" id="may-4" value="1717" oninput="calcBenefit()"></div>
           <div class="mom-cell"><span class="mom-delta" id="delta-4">—</span></div>
@@ -513,7 +513,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Pretendard', san
         부서별 MoM 증감률을 전체 합 대비 비중(50%) + 증감금액을 전체 합 대비 비중(50%)으로 혼합 산정.
         증감이 마이너스인 부서는 배분 비율 0으로 처리합니다.
         재원 = (SA 보상액 + GFA 보상액) × 재원비율 / 100.
-        제휴실 정액 = 재원 × 10%. 배분 대상 = 재원 × 90%.
+        제휴실 정액 = 재원 × 10%. 배분 대상 = 재원 × 90%. 제휴실(미디어제휴실)은 정액만 받고 MoM 배분에서는 제외합니다.
       </div>
     </div>
   </div>
@@ -676,10 +676,10 @@ function calcBenefit() {
     `총 재원 ${Math.round(fund).toLocaleString()}만원 | 배분 대상 ${Math.round(distFund).toLocaleString()}만원`;
 
   const depts = [
-    { id: 1, name: '마케팅본부' },
-    { id: 2, name: 'IMC본부' },
-    { id: 3, name: '그로스팀' },
-    { id: 4, name: '미디어제휴실' },
+    { id: 1, name: '마케팅본부', dist: true },
+    { id: 2, name: 'IMC본부', dist: true },
+    { id: 3, name: '그로스팀', dist: true },
+    { id: 4, name: '미디어제휴실', dist: false },
   ];
 
   const momData = depts.map(d => {
@@ -701,7 +701,7 @@ function calcBenefit() {
   const tbody = document.getElementById('result-tbody');
   const statusEl = document.getElementById('mom-status');
 
-  const positives = momData.filter(d => d.delta > 0);
+  const positives = momData.filter(d => d.dist && d.delta > 0);
   if (positives.length === 0 || totalReward === 0) {
     statusEl.textContent = totalReward === 0
       ? '보상액 미입력. 구간 확정 후 SA/GFA 예상 보상액을 입력하세요'
@@ -717,7 +717,7 @@ function calcBenefit() {
 
   let rows = '';
 
-  momData.forEach(d => {
+  momData.filter(d => d.dist).forEach(d => {
     let ratePct = 0, amtPct = 0;
     if (d.delta > 0 && totalDeltaRate > 0) ratePct = d.rate / totalDeltaRate * 100;
     if (d.delta > 0 && totalDeltaAmt > 0) amtPct = d.delta / totalDeltaAmt * 100;
